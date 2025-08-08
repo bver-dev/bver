@@ -134,6 +134,59 @@ export type Database = {
           },
         ]
       }
+      assessments: {
+        Row: {
+          id: string
+          user_id: string | null
+          address: string
+          assessed_value: number | null
+          estimated_value: number | null
+          over_assessment_amount: number | null
+          over_assessment_percentage: number | null
+          viability: string | null
+          confidence_score: number | null
+          data_sources: Json | null
+          created_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          address: string
+          assessed_value?: number | null
+          estimated_value?: number | null
+          over_assessment_amount?: number | null
+          over_assessment_percentage?: number | null
+          viability?: string | null
+          confidence_score?: number | null
+          data_sources?: Json | null
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          address?: string
+          assessed_value?: number | null
+          estimated_value?: number | null
+          over_assessment_amount?: number | null
+          over_assessment_percentage?: number | null
+          viability?: string | null
+          confidence_score?: number | null
+          data_sources?: Json | null
+          created_at?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           appeal_id: string | null
@@ -256,6 +309,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      property_data_cache: {
+        Row: {
+          id: string
+          address: string
+          api_source: string
+          data: Json
+          created_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          address: string
+          api_source: string
+          data: Json
+          created_at?: string
+          expires_at: string
+        }
+        Update: {
+          id?: string
+          address?: string
+          api_source?: string
+          data?: Json
+          created_at?: string
+          expires_at?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {

@@ -10,18 +10,16 @@ export async function GET() {
     const supabase = await createClient()
     const { data: recentEntries } = await supabase
       .from('property_data_cache')
-      .select('address, city, state, zip_code, data_source, updated_at')
-      .order('updated_at', { ascending: false })
+      .select('address, api_source, created_at, expires_at')
+      .order('created_at', { ascending: false })
       .limit(10)
     
     // Check if entries are valid
-    const cacheExpiration = parseInt(process.env.PROPERTY_CACHE_DAYS || '30')
-    const expirationMs = cacheExpiration * 24 * 60 * 60 * 1000
-    const now = Date.now()
+    const now = new Date()
     
     const entriesWithValidity = recentEntries?.map(entry => ({
-      ...entry,
-      is_valid: (now - new Date(entry.updated_at).getTime()) < expirationMs
+      ...(entry as Record<string, any>),
+      is_valid: new Date(entry.expires_at) > now
     }))
     
     return NextResponse.json({

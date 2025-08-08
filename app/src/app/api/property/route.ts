@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     console.log('Cache miss - fetching fresh data')
 
     // Initialize property data object
-    let propertyData = {
+    let propertyData: any = {
       address: streetAddress,
       city,
       state,

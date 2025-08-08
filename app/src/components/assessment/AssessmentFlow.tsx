@@ -115,7 +115,52 @@ export default function AssessmentFlow({
     setStep('analyzing')
     
     try {
-      // Simulate assessment analysis
+      // Combine property details with form data
+      const assessmentData = {
+        ...propertyDetails,
+        ...details,
+        address: initialAddress
+      }
+      
+      // Call the assessment API
+      const response = await fetch('/api/assessment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          propertyDetails: assessmentData
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Assessment analysis failed')
+      }
+      
+      const result = await response.json()
+      
+      // Fetch comparables if we have coordinates
+      if (latitude && longitude && details.squareFeet) {
+        try {
+          const compResponse = await fetch(
+            `/api/comparables?lat=${latitude}&lng=${longitude}&squareFeet=${details.squareFeet}&bedrooms=${details.bedrooms || 0}&bathrooms=${details.bathrooms || 0}&propertyType=${details.propertyType || 'Single Family'}`
+          )
+          
+          if (compResponse.ok) {
+            const compData = await compResponse.json()
+            result.comparables = compData.comparables || []
+          }
+        } catch (compError) {
+          console.error('Failed to fetch comparables:', compError)
+        }
+      }
+      
+      setAssessmentResult(result)
+      setStep('results')
+    } catch (err) {
+      console.error('Assessment error:', err)
+      setError('Failed to analyze assessment. Please try again.')
+      // Keep the mock data as fallback for demo
       setTimeout(() => {
         const mockResult: AssessmentResult = {
           viability: 'high',
@@ -139,10 +184,7 @@ export default function AssessmentFlow({
         }
         setAssessmentResult(mockResult)
         setStep('results')
-      }, 3000)
-    } catch (err) {
-      setError('Failed to analyze assessment')
-      console.error(err)
+      }, 1000)
     }
   }
 

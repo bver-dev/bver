@@ -59,6 +59,32 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Navigation Header */}
+      <header className="absolute top-0 left-0 right-0 z-20 bg-transparent">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
+              <Search className="w-8 h-8 text-blue-600 mr-2" />
+              <span className="text-2xl font-bold text-white">BVER</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <a
+                href="/auth/login"
+                className="px-4 py-2 text-white hover:text-blue-200 transition-colors"
+              >
+                Sign In
+              </a>
+              <a
+                href="/auth/signup"
+                className="px-6 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+              >
+                Get Started
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section with Map Background */}
       <div className="relative h-screen">
         {coordinates ? (
