@@ -24,8 +24,8 @@ export default function HomePage() {
       // Navigate after animation
       setTimeout(() => {
         router.push(`/assessment?address=${encodeURIComponent(address)}&lat=${lat}&lng=${lng}`)
-      }, 2500)
-    }, 1500) // Let map zoom animation complete first
+      }, 2000)
+    }, 2000) // Let map zoom animation complete first
   }
 
   const stats = [
@@ -98,7 +98,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 opacity-90" />
         )}
         
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-4">
+        <div className={`relative h-full flex flex-col items-center justify-center px-4 transition-opacity duration-500 ${coordinates ? 'opacity-0 pointer-events-none' : 'opacity-100 z-10'}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

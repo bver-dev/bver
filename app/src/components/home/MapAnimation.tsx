@@ -16,11 +16,11 @@ export default function MapAnimation({ lat, lng, isSearching }: MapAnimationProp
   const [mapOpacity, setMapOpacity] = useState(0)
 
   useEffect(() => {
-    // Fade in map first
-    setTimeout(() => setMapOpacity(1), 100)
+    // Fade in map immediately
+    setMapOpacity(1)
     
-    // Animate zoom effect more smoothly
-    const zoomSteps = [1, 1.5, 2, 3, 4.5, 7, 10]
+    // Animate zoom effect more smoothly with better timing
+    const zoomSteps = [1, 1.2, 1.5, 2, 2.8, 4, 6, 8, 10, 12]
     let currentStep = 0
 
     const zoomInterval = setInterval(() => {
@@ -29,13 +29,13 @@ export default function MapAnimation({ lat, lng, isSearching }: MapAnimationProp
         currentStep++
         
         // Show pin when zoom is mostly complete
-        if (currentStep === zoomSteps.length - 2) {
+        if (currentStep === zoomSteps.length - 3) {
           setShowPin(true)
         }
       } else {
         clearInterval(zoomInterval)
       }
-    }, 200)
+    }, 180)
 
     return () => clearInterval(zoomInterval)
   }, [])
@@ -56,8 +56,8 @@ export default function MapAnimation({ lat, lng, isSearching }: MapAnimationProp
       <motion.div 
         className="relative w-full h-full"
         initial={{ opacity: 0 }}
-        animate={{ opacity: mapOpacity }}
-        transition={{ duration: 0.5 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
       >
         {/* Animated Map Background */}
         <motion.div
@@ -85,8 +85,8 @@ export default function MapAnimation({ lat, lng, isSearching }: MapAnimationProp
                   <path
                     d="M 40 0 L 0 0 0 40"
                     fill="none"
-                    stroke="rgba(255,255,255,0.15)"
-                    strokeWidth="0.5"
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth="1"
                   />
                 </pattern>
               </defs>
@@ -101,16 +101,16 @@ export default function MapAnimation({ lat, lng, isSearching }: MapAnimationProp
               transition={{ delay: 0.3, duration: 0.5 }}
             >
               {/* Main roads */}
-              <div className="absolute top-[45%] left-0 right-0 h-1 bg-white/20" />
-              <div className="absolute top-[55%] left-0 right-0 h-1 bg-white/20" />
-              <div className="absolute left-[45%] top-0 bottom-0 w-1 bg-white/20" />
-              <div className="absolute left-[55%] top-0 bottom-0 w-1 bg-white/20" />
+              <div className="absolute top-[45%] left-0 right-0 h-2 bg-white/30" />
+              <div className="absolute top-[55%] left-0 right-0 h-2 bg-white/30" />
+              <div className="absolute left-[45%] top-0 bottom-0 w-2 bg-white/30" />
+              <div className="absolute left-[55%] top-0 bottom-0 w-2 bg-white/30" />
               
               {/* Secondary roads */}
-              <div className="absolute top-[30%] left-0 right-0 h-0.5 bg-white/10" />
-              <div className="absolute top-[70%] left-0 right-0 h-0.5 bg-white/10" />
-              <div className="absolute left-[30%] top-0 bottom-0 w-0.5 bg-white/10" />
-              <div className="absolute left-[70%] top-0 bottom-0 w-0.5 bg-white/10" />
+              <div className="absolute top-[30%] left-0 right-0 h-1 bg-white/20" />
+              <div className="absolute top-[70%] left-0 right-0 h-1 bg-white/20" />
+              <div className="absolute left-[30%] top-0 bottom-0 w-1 bg-white/20" />
+              <div className="absolute left-[70%] top-0 bottom-0 w-1 bg-white/20" />
             </motion.div>
 
             {/* Simulated buildings/blocks */}
