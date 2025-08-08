@@ -16,15 +16,16 @@ export default function HomePage() {
   const handleAddressSelect = (address: string, lat: number, lng: number) => {
     setSelectedAddress(address)
     setCoordinates({ lat, lng })
-    setIsSearching(true)
     
-    // Show loading animation briefly, then navigate
+    // Delay before showing search animation for smoother transition
     setTimeout(() => {
-      setIsSearching(false) // Hide the overlay before navigation
+      setIsSearching(true)
+      
+      // Navigate after animation
       setTimeout(() => {
         router.push(`/assessment?address=${encodeURIComponent(address)}&lat=${lat}&lng=${lng}`)
-      }, 500) // Small delay to let the animation fade out
-    }, 2000) // Reduced from 3000ms for better UX
+      }, 2500)
+    }, 1500) // Let map zoom animation complete first
   }
 
   const stats = [
