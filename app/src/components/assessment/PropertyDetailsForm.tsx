@@ -159,7 +159,7 @@ export default function PropertyDetailsForm({ initialData, onSubmit }: PropertyD
             <Home className="w-5 h-5 text-blue-600 mr-2" />
             <h3 className="text-lg font-semibold text-gray-900">Property Address</h3>
           </div>
-          {initialData.dataSource && (
+          {process.env.NODE_ENV === 'development' && initialData.dataSource && (
             <span className={`text-xs px-2 py-1 rounded-full ${
               initialData.dataSource === 'rentcast' ? 'bg-green-100 text-green-700' :
               initialData.dataSource === 'attom' ? 'bg-blue-100 text-blue-700' :
@@ -512,8 +512,8 @@ export default function PropertyDetailsForm({ initialData, onSubmit }: PropertyD
               </div>
             )}
             
-            {/* Show raw data if available */}
-            {initialData.rawData && (
+            {/* Show raw data if available - development only */}
+            {process.env.NODE_ENV === 'development' && initialData.rawData && (
               <details className="mt-4">
                 <summary className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium">
                   Click to see full raw RentCast response
