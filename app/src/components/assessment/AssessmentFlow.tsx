@@ -423,13 +423,13 @@ export default function AssessmentFlow({
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-500">Current Assessment</p>
+                    <p className="text-sm text-gray-700">Current Assessment</p>
                     <p className="text-2xl font-bold text-gray-900">
                       {formatCurrency(assessmentResult.currentAssessment)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Estimated Market Value</p>
+                    <p className="text-sm text-gray-700">Estimated Market Value</p>
                     <p className="text-2xl font-bold text-gray-900">
                       {formatCurrency(assessmentResult.estimatedMarketValue)}
                     </p>
@@ -438,7 +438,7 @@ export default function AssessmentFlow({
 
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-500">Over-Assessment</p>
+                    <p className="text-sm text-gray-700">Over-Assessment</p>
                     <p className="text-2xl font-bold text-red-600">
                       {formatCurrency(assessmentResult.overAssessmentAmount)}
                     </p>
@@ -447,7 +447,7 @@ export default function AssessmentFlow({
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Potential Annual Savings</p>
+                    <p className="text-sm text-gray-700">Potential Annual Savings</p>
                     <p className="text-2xl font-bold text-green-600">
                       {formatCurrency(assessmentResult.estimatedSavings)}
                     </p>

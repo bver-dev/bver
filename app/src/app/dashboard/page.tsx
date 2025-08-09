@@ -82,7 +82,7 @@ export default async function DashboardPage() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Properties</p>
+                <p className="text-sm text-gray-700">Properties</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {properties?.length || 0}
                 </p>
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Assessments</p>
+                <p className="text-sm text-gray-700">Assessments</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {assessments?.length || 0}
                 </p>
@@ -106,7 +106,7 @@ export default async function DashboardPage() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Potential Savings</p>
+                <p className="text-sm text-gray-700">Potential Savings</p>
                 <p className="text-2xl font-bold text-green-600">
                   ${totalSavings.toFixed(0)}
                 </p>
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Appeals Filed</p>
+                <p className="text-sm text-gray-700">Appeals Filed</p>
                 <p className="text-2xl font-bold text-gray-900">
                   0
                 </p>
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
                 <Plus className="w-5 h-5 text-blue-600 mr-3" />
                 <span className="text-gray-900 font-medium">New Assessment</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
+              <ChevronRight className="w-5 h-5 text-gray-600" />
             </Link>
 
             <Link
@@ -151,7 +151,7 @@ export default async function DashboardPage() {
                 <Home className="w-5 h-5 text-blue-600 mr-3" />
                 <span className="text-gray-900 font-medium">My Properties</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
+              <ChevronRight className="w-5 h-5 text-gray-600" />
             </Link>
 
             <Link
@@ -162,7 +162,7 @@ export default async function DashboardPage() {
                 <FileText className="w-5 h-5 text-blue-600 mr-3" />
                 <span className="text-gray-900 font-medium">View Appeals</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
+              <ChevronRight className="w-5 h-5 text-gray-600" />
             </Link>
           </div>
         </div>
@@ -181,19 +181,19 @@ export default async function DashboardPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead>
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Property
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Assessed Value
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Over-Assessment
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Viability
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Date
                     </th>
                   </tr>
@@ -223,7 +223,7 @@ export default async function DashboardPage() {
                           {assessment.viability}
                         </span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                         {new Date(assessment.created_at).toLocaleDateString()}
                       </td>
                     </tr>
@@ -233,8 +233,8 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <TrendingDown className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">No assessments yet</p>
+              <TrendingDown className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-700">No assessments yet</p>
               <Link
                 href="/"
                 className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

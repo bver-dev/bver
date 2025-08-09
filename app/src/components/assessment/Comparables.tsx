@@ -127,7 +127,7 @@ export default function Comparables({
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-gray-500">Comparable properties unavailable</p>
+          <p className="text-gray-600">Comparable properties unavailable</p>
         </CardContent>
       </Card>
     )
@@ -177,14 +177,14 @@ export default function Comparables({
               )}
               {comparablesData.valuation.confidence && (
                 <div className="mt-3">
-                  <div className="text-sm text-gray-500 mb-1">Confidence Score</div>
+                  <div className="text-sm text-gray-700 mb-1">Confidence Score</div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full"
                       style={{ width: `${comparablesData.valuation.confidence}%` }}
                     />
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">{comparablesData.valuation.confidence}%</div>
+                  <div className="text-xs text-gray-600 mt-1">{comparablesData.valuation.confidence}%</div>
                 </div>
               )}
             </div>
@@ -200,24 +200,24 @@ export default function Comparables({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <div className="text-sm text-gray-500">Properties Found</div>
-              <div className="text-2xl font-semibold">{comparablesData.summary.count}</div>
+              <div className="text-sm text-gray-700">Properties Found</div>
+              <div className="text-2xl font-semibold text-gray-700">{comparablesData.summary.count}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-500">Avg Sale Price</div>
-              <div className="text-2xl font-semibold">{formatCurrency(comparablesData.summary.avgSalePrice)}</div>
+              <div className="text-sm text-gray-700">Avg Sale Price</div>
+              <div className="text-2xl font-semibold text-gray-700">{formatCurrency(comparablesData.summary.avgSalePrice)}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-500">Avg $/Sq Ft</div>
-              <div className="text-2xl font-semibold">{formatCurrency(comparablesData.summary.avgPricePerSqFt)}</div>
+              <div className="text-sm text-gray-700">Avg $/Sq Ft</div>
+              <div className="text-2xl font-semibold text-gray-700">{formatCurrency(comparablesData.summary.avgPricePerSqFt)}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-500">Search Radius</div>
-              <div className="text-2xl font-semibold">{comparablesData.summary.radius} mi</div>
+              <div className="text-sm text-gray-700">Search Radius</div>
+              <div className="text-2xl font-semibold text-gray-700">{comparablesData.summary.radius} mi</div>
             </div>
           </div>
-          {comparablesData.summary.dataSource && (
-            <div className="mt-4 text-xs text-gray-500">
+          {process.env.NODE_ENV === 'development' && comparablesData.summary.dataSource && (
+            <div className="mt-4 text-xs text-gray-600">
               Data Source: {comparablesData.summary.dataSource.toUpperCase()}
             </div>
           )}
@@ -239,10 +239,10 @@ export default function Comparables({
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
-                      <MapPin className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+                      <MapPin className="w-4 h-4 text-gray-600 mt-1 flex-shrink-0" />
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">{property.address}</div>
-                        <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-600">
+                        <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-700">
                           <span>{property.bedrooms} bed</span>
                           <span>{property.bathrooms} bath</span>
                           <span>{property.squareFeet.toLocaleString()} sq ft</span>
@@ -257,12 +257,12 @@ export default function Comparables({
                     <div className="text-lg font-semibold text-gray-900">
                       {formatCurrency(property.lastSalePrice)}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-700">
                       {formatCurrency(property.pricePerSqFt)}/sq ft
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <Calendar className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs text-gray-500">
+                      <Calendar className="w-3 h-3 text-gray-600" />
+                      <span className="text-xs text-gray-600">
                         Sold {formatDate(property.lastSaleDate)}
                       </span>
                     </div>
@@ -275,7 +275,7 @@ export default function Comparables({
                 </div>
                 
                 {property.listingPrice && (
-                  <div className="mt-2 pt-2 border-t text-sm text-gray-600">
+                  <div className="mt-2 pt-2 border-t text-sm text-gray-700">
                     <DollarSign className="w-3 h-3 inline mr-1" />
                     Listed at {formatCurrency(property.listingPrice)}
                     {property.daysOnMarket && ` • ${property.daysOnMarket} days on market`}

@@ -172,12 +172,12 @@ export default function PropertyDetailsForm({ initialData, onSubmit }: PropertyD
         </div>
         <p className="text-gray-700">{initialData.address}</p>
         {initialData.county && (
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-700 mt-1">
             {initialData.county} • Parcel: {initialData.parcelNumber || 'N/A'}
           </p>
         )}
         {initialData.owner && (
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-700 mt-1">
             Owner: {initialData.owner.names ? initialData.owner.names.join(', ') : initialData.owner.name || 'Not available'}
             {initialData.owner.type && ` (${initialData.owner.type})`}
           </p>
@@ -197,7 +197,7 @@ export default function PropertyDetailsForm({ initialData, onSubmit }: PropertyD
               Current Assessed Value *
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700">$</span>
               <input
                 type="number"
                 {...register('assessedValue', { valueAsNumber: true })}
@@ -214,7 +214,7 @@ export default function PropertyDetailsForm({ initialData, onSubmit }: PropertyD
               Last Sale Price
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700">$</span>
               <input
                 type="number"
                 {...register('lastSalePrice', { valueAsNumber: true })}
@@ -262,10 +262,10 @@ export default function PropertyDetailsForm({ initialData, onSubmit }: PropertyD
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Year</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assessed Value</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Land Value</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Improvement Value</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Year</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Assessed Value</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Land Value</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Improvement Value</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -303,9 +303,9 @@ export default function PropertyDetailsForm({ initialData, onSubmit }: PropertyD
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sale Price</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Price/Sqft</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Date</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Sale Price</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Price/Sqft</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
