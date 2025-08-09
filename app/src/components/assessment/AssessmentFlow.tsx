@@ -59,12 +59,26 @@ export default function AssessmentFlow({
       
       const data = await response.json()
       
-      // Parse address components
+      // Parse address components more intelligently
       const addressParts = initialAddress.split(',').map(part => part.trim())
       const streetAddress = addressParts[0] || ''
       const city = addressParts[1] || data.city || ''
-      const stateZip = addressParts[2] || ''
-      const [state, zipCode] = stateZip.split(' ').filter(Boolean)
+      // Handle both "CA 95120, USA" and "CA 95120" formats
+      let state = ''
+      let zipCode = ''
+      if (addressParts.length >= 3) {
+        const stateZipPart = addressParts[2] || ''
+        const stateZipMatch = stateZipPart.match(/([A-Z]{2})\s*(\d{5})/)
+        if (stateZipMatch) {
+          state = stateZipMatch[1]
+          zipCode = stateZipMatch[2]
+        } else {
+          // Fallback parsing
+          const parts = stateZipPart.split(' ').filter(Boolean)
+          state = parts[0] || ''
+          zipCode = parts[1] || ''
+        }
+      }
       
       // Map API response to our property details format
       const propertyData = {
@@ -485,7 +499,7 @@ export default function AssessmentFlow({
                 >
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Market Trends</h2>
                   <MarketTrends 
-                    zipCode={propertyDetails.zipCode || initialAddress.split(' ').pop() || ''}
+                    zipCode={propertyDetails.zipCode || ''}
                     city={propertyDetails.city}
                     state={propertyDetails.state}
                   />
@@ -499,10 +513,10 @@ export default function AssessmentFlow({
                 >
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Comparable Properties</h2>
                   <Comparables
-                    address={propertyDetails.address || initialAddress}
-                    city={propertyDetails.city || ''}
-                    state={propertyDetails.state || ''}
-                    zipCode={propertyDetails.zipCode || initialAddress.split(' ').pop() || ''}
+                    address={propertyDetails.streetAddress || propertyDetails.address || initialAddress.split(',')[0] || initialAddress}
+                    city={propertyDetails.city || 'Unknown'}
+                    state={propertyDetails.state || 'CA'}
+                    zipCode={propertyDetails.zipCode || '00000'}
                     lat={latitude}
                     lng={longitude}
                     squareFeet={propertyDetails.squareFeet}

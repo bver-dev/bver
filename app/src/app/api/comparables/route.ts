@@ -54,21 +54,22 @@ export async function GET(request: NextRequest) {
   const bathrooms = parseFloat(searchParams.get('bathrooms') || '0')
   const propertyType = searchParams.get('propertyType') || 'Single Family'
 
-  if (!address || !city || !state || !zipCode) {
+  // Only require address, others can be optional
+  if (!address) {
     return NextResponse.json(
-      { error: 'Address components required' },
+      { error: 'Address is required' },
       { status: 400 }
     )
   }
 
   try {
     // Check cache first
-    const cacheKey = `comparables_${address}_${city}_${state}_${zipCode}`
+    const cacheKey = `comparables_${address}_${city || 'unknown'}_${state || 'unknown'}_${zipCode || 'unknown'}`
     const cachedData = await getCachedPropertyData(
       cacheKey,
-      city,
-      state,
-      zipCode
+      city || 'unknown',
+      state || 'unknown',
+      zipCode || 'unknown'
     )
     
     if (cachedData) {
@@ -97,9 +98,9 @@ export async function GET(request: NextRequest) {
         // Cache the response
         await setCachedPropertyData(
           cacheKey,
-          city,
-          state,
-          zipCode,
+          city || 'unknown',
+          state || 'unknown',
+          zipCode || 'unknown',
           lat,
           lng,
           'rentcast_comparables',

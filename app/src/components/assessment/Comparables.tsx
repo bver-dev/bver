@@ -71,6 +71,8 @@ export default function Comparables({
     const fetchComparables = async () => {
       try {
         setLoading(true)
+        console.log('Fetching comparables with:', { address, city, state, zipCode, lat, lng, squareFeet, bedrooms, bathrooms, propertyType })
+        
         const params = new URLSearchParams({
           address,
           city,
@@ -88,6 +90,7 @@ export default function Comparables({
         if (!response.ok) throw new Error('Failed to fetch comparables')
         
         const data = await response.json()
+        console.log('Comparables data received:', data)
         setComparablesData(data)
       } catch (err) {
         console.error('Error fetching comparables:', err)
@@ -97,8 +100,12 @@ export default function Comparables({
       }
     }
 
-    if (address && city && state && zipCode) {
+    // Always try to fetch comparables if we have at least an address
+    if (address) {
       fetchComparables()
+    } else {
+      console.log('No address provided for comparables')
+      setLoading(false)
     }
   }, [address, city, state, zipCode, lat, lng, squareFeet, bedrooms, bathrooms, propertyType])
 
