@@ -142,11 +142,16 @@ export default function AssessmentFlow({
     setStep('analyzing')
     
     try {
-      // Combine property details with form data
+      // Combine property details with form data, preserving address components
       const assessmentData = {
         ...propertyDetails,
         ...details,
-        address: initialAddress
+        address: initialAddress,
+        // Ensure address components are preserved
+        city: details.city || propertyDetails?.city,
+        state: details.state || propertyDetails?.state,
+        zipCode: details.zipCode || propertyDetails?.zipCode,
+        streetAddress: details.streetAddress || propertyDetails?.streetAddress
       }
       
       // Call the assessment API
@@ -167,19 +172,19 @@ export default function AssessmentFlow({
       const result = await response.json()
       
       // Fetch comparables if we have coordinates
-      if (latitude && longitude && details.squareFeet) {
+      if (latitude && longitude && assessmentData.squareFeet) {
         try {
           const params = new URLSearchParams({
-            address: details.streetAddress || initialAddress.split(',')[0],
-            city: details.city || '',
-            state: details.state || '',
-            zipCode: details.zipCode || '',
+            address: assessmentData.streetAddress || initialAddress.split(',')[0],
+            city: assessmentData.city || '',
+            state: assessmentData.state || '',
+            zipCode: assessmentData.zipCode || '',
             lat: latitude.toString(),
             lng: longitude.toString(),
-            squareFeet: details.squareFeet.toString(),
-            bedrooms: (details.bedrooms || 0).toString(),
-            bathrooms: (details.bathrooms || 0).toString(),
-            propertyType: details.propertyType || 'Single Family'
+            squareFeet: assessmentData.squareFeet.toString(),
+            bedrooms: (assessmentData.bedrooms || 0).toString(),
+            bathrooms: (assessmentData.bathrooms || 0).toString(),
+            propertyType: assessmentData.propertyType || 'Single Family'
           })
           const compResponse = await fetch(`/api/comparables?${params}`)
           
@@ -192,6 +197,8 @@ export default function AssessmentFlow({
         }
       }
       
+      // Update property details with the complete assessment data
+      setPropertyDetails(assessmentData)
       setAssessmentResult(result)
       setStep('results')
     } catch (err) {
@@ -491,19 +498,36 @@ export default function AssessmentFlow({
             {/* Market Trends and Comparables */}
             {propertyDetails && (
               <div className="space-y-8 mt-8">
+                {/* Debug info */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="bg-gray-100 p-4 rounded text-xs">
+                    <pre>Debug: {JSON.stringify({ 
+                      address: propertyDetails.address,
+                      streetAddress: propertyDetails.streetAddress,
+                      city: propertyDetails.city, 
+                      state: propertyDetails.state, 
+                      zipCode: propertyDetails.zipCode,
+                      lat: latitude,
+                      lng: longitude
+                    }, null, 2)}</pre>
+                  </div>
+                )}
+                
                 {/* Market Trends */}
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Market Trends</h2>
-                  <MarketTrends 
-                    zipCode={propertyDetails.zipCode || ''}
-                    city={propertyDetails.city}
-                    state={propertyDetails.state}
-                  />
-                </motion.div>
+                {propertyDetails.zipCode && (
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Market Trends</h2>
+                    <MarketTrends 
+                      zipCode={propertyDetails.zipCode}
+                      city={propertyDetails.city}
+                      state={propertyDetails.state}
+                    />
+                  </motion.div>
+                )}
 
                 {/* Comparable Properties */}
                 <motion.div
@@ -514,9 +538,9 @@ export default function AssessmentFlow({
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Comparable Properties</h2>
                   <Comparables
                     address={propertyDetails.streetAddress || propertyDetails.address || initialAddress.split(',')[0] || initialAddress}
-                    city={propertyDetails.city || 'Unknown'}
+                    city={propertyDetails.city || 'San Jose'}
                     state={propertyDetails.state || 'CA'}
-                    zipCode={propertyDetails.zipCode || '00000'}
+                    zipCode={propertyDetails.zipCode || '95120'}
                     lat={latitude}
                     lng={longitude}
                     squareFeet={propertyDetails.squareFeet}

@@ -81,19 +81,25 @@ export async function GET(request: NextRequest) {
           rentcastKey
         )
         
-        // Cache the response
-        await setCachedPropertyData(
-          cacheKey,
-          city || '',
-          state || '',
-          zipCode,
-          null,
-          null,
-          'rentcast_market',
-          marketData
-        )
-        
-        return NextResponse.json(marketData)
+        // Check if RentCast returned actual data
+        if (marketData.trends && marketData.trends.length > 0) {
+          // Cache the response
+          await setCachedPropertyData(
+            cacheKey,
+            city || '',
+            state || '',
+            zipCode,
+            null,
+            null,
+            'rentcast_market',
+            marketData
+          )
+          
+          return NextResponse.json(marketData)
+        } else {
+          console.log('RentCast returned no market data, falling back to mock data')
+          // Fall through to mock data
+        }
       } catch (apiError) {
         console.error('RentCast market API error:', apiError)
         // Fall through to mock data
@@ -121,6 +127,8 @@ async function fetchRentCastMarketData(
 ): Promise<MarketStats> {
   // RentCast markets endpoint
   const url = `https://api.rentcast.io/v1/markets?zipCode=${zipCode}`
+  
+  console.log('RentCast Markets request URL:', url)
 
   const response = await fetch(url, {
     headers: {
@@ -135,31 +143,48 @@ async function fetchRentCastMarketData(
   }
 
   const data = await response.json()
+  console.log('RentCast Markets response:', JSON.stringify(data, null, 2))
   
   // Transform RentCast response to our format
   const currentMonth = new Date()
   const trends: MarketTrend[] = []
   
   // Process historical data if available
-  if (data.saleData && Array.isArray(data.saleData)) {
-    data.saleData.forEach((monthData: any) => {
+  if (data.saleData?.history) {
+    // Convert history object to array and sort by date
+    const historyEntries = Object.entries(data.saleData.history)
+      .map(([key, value]: [string, any]) => ({
+        ...value,
+        date: new Date(value.date)
+      }))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Most recent first
+      .slice(0, 12) // Last 12 months
+    
+    historyEntries.forEach((monthData: any) => {
       trends.push({
-        month: monthData.month || currentMonth.toLocaleString('default', { month: 'long' }),
-        year: monthData.year || currentMonth.getFullYear(),
-        medianSalePrice: monthData.medianSalePrice || 0,
-        medianRentPrice: monthData.medianRentPrice || 0,
-        medianPricePerSqFt: monthData.medianPricePerSqFt || 0,
+        month: monthData.date.toLocaleString('default', { month: 'long' }),
+        year: monthData.date.getFullYear(),
+        medianSalePrice: monthData.medianPrice || 0,
+        medianRentPrice: data.rentalData?.medianPrice || 0, // Use rental data if available
+        medianPricePerSqFt: monthData.medianPricePerSquareFoot || 0,
         averageDaysOnMarket: monthData.averageDaysOnMarket || 0,
-        inventoryCount: monthData.inventoryCount || 0,
-        salesCount: monthData.salesCount || 0
+        inventoryCount: monthData.totalListings || 0,
+        salesCount: monthData.newListings || 0
       })
     })
   }
 
+  // Get current month data (most recent from history or overall stats)
+  const currentData = trends[0] || {
+    medianSalePrice: data.saleData?.medianPrice || 0,
+    medianPricePerSqFt: data.saleData?.medianPricePerSquareFoot || 0,
+    averageDaysOnMarket: data.saleData?.averageDaysOnMarket || 0,
+    inventoryCount: data.saleData?.totalListings || 0
+  }
+  
   // Calculate YoY and MoM changes
-  const currentData = data.saleData?.[0] || {}
-  const lastYearData = data.saleData?.[11] || {}
-  const lastMonthData = data.saleData?.[1] || {}
+  const lastYearData = trends[11] || {}
+  const lastMonthData = trends[1] || {}
   
   const priceChangeYoY = lastYearData.medianSalePrice 
     ? ((currentData.medianSalePrice - lastYearData.medianSalePrice) / lastYearData.medianSalePrice) * 100
@@ -174,29 +199,40 @@ async function fetchRentCastMarketData(
     city: city || data.city || '',
     state: state || data.state || '',
     currentMonth: {
-      medianSalePrice: currentData.medianSalePrice || 0,
-      medianRentPrice: currentData.medianRentPrice || 0,
-      medianPricePerSqFt: currentData.medianPricePerSqFt || 0,
-      averageDaysOnMarket: currentData.averageDaysOnMarket || 0,
-      inventoryCount: currentData.inventoryCount || 0,
+      medianSalePrice: currentData.medianSalePrice || data.saleData?.medianPrice || 0,
+      medianRentPrice: data.rentalData?.medianPrice || 0,
+      medianPricePerSqFt: currentData.medianPricePerSqFt || data.saleData?.medianPricePerSquareFoot || 0,
+      averageDaysOnMarket: currentData.averageDaysOnMarket || data.saleData?.averageDaysOnMarket || 0,
+      inventoryCount: currentData.inventoryCount || data.saleData?.totalListings || 0,
       priceChangeYoY: Math.round(priceChangeYoY * 10) / 10,
       priceChangeMoM: Math.round(priceChangeMoM * 10) / 10
     },
-    trends: trends.slice(0, 12), // Last 12 months
-    propertyTypeBreakdown: data.propertyTypes ? {
-      singleFamily: data.propertyTypes.singleFamily ? {
-        medianPrice: data.propertyTypes.singleFamily.medianPrice,
-        count: data.propertyTypes.singleFamily.count
-      } : undefined,
-      condo: data.propertyTypes.condo ? {
-        medianPrice: data.propertyTypes.condo.medianPrice,
-        count: data.propertyTypes.condo.count
-      } : undefined,
-      townhouse: data.propertyTypes.townhouse ? {
-        medianPrice: data.propertyTypes.townhouse.medianPrice,
-        count: data.propertyTypes.townhouse.count
-      } : undefined
-    } : undefined
+    trends: trends, // Already sliced to 12 months above
+    propertyTypeBreakdown: (() => {
+      if (!data.saleData?.dataByPropertyType) return undefined
+      
+      const breakdown: any = {}
+      data.saleData.dataByPropertyType.forEach((type: any) => {
+        if (type.propertyType === 'Single Family') {
+          breakdown.singleFamily = {
+            medianPrice: type.medianPrice,
+            count: type.totalListings
+          }
+        } else if (type.propertyType === 'Condo') {
+          breakdown.condo = {
+            medianPrice: type.medianPrice,
+            count: type.totalListings
+          }
+        } else if (type.propertyType === 'Townhouse') {
+          breakdown.townhouse = {
+            medianPrice: type.medianPrice,
+            count: type.totalListings
+          }
+        }
+      })
+      
+      return Object.keys(breakdown).length > 0 ? breakdown : undefined
+    })()
   }
 }
 

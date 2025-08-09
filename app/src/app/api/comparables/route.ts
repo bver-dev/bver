@@ -18,6 +18,7 @@ interface RentCastComparable {
   propertyType?: string
   lastSaleDate?: string
   lastSalePrice?: number
+  price?: number
   listedDate?: string
   listedPrice?: number
   removedDate?: string
@@ -95,19 +96,31 @@ export async function GET(request: NextRequest) {
           rentcastKey
         )
         
-        // Cache the response
-        await setCachedPropertyData(
-          cacheKey,
-          city || 'unknown',
-          state || 'unknown',
-          zipCode || 'unknown',
-          lat,
-          lng,
-          'rentcast_comparables',
-          comparablesData
-        )
+        // Check if RentCast returned actual comparables
+        console.log('Comparables data check:', {
+          hasComparables: !!comparablesData.comparables,
+          comparablesLength: comparablesData.comparables?.length || 0
+        })
         
-        return NextResponse.json(comparablesData)
+        if (comparablesData.comparables && comparablesData.comparables.length > 0) {
+          // Cache the response
+          await setCachedPropertyData(
+            cacheKey,
+            city || 'unknown',
+            state || 'unknown',
+            zipCode || 'unknown',
+            lat,
+            lng,
+            'rentcast_comparables',
+            comparablesData
+          )
+          
+          console.log('Returning RentCast data with', comparablesData.comparables.length, 'comparables')
+          return NextResponse.json(comparablesData)
+        } else {
+          console.log('RentCast returned no comparables, falling back to mock data')
+          // Fall through to mock data
+        }
       } catch (apiError) {
         console.error('RentCast comparables API error:', apiError)
         // Fall through to mock data
@@ -164,9 +177,9 @@ async function fetchRentCastComparables(
   // Build query parameters
   const params = new URLSearchParams({
     address: `${address}, ${city}, ${state} ${zipCode}`,
-    compCount: '10', // Request up to 10 comparables
-    maxRadius: '1', // 1 mile radius
-    daysOld: '365', // Comparables from last year
+    compCount: '20', // Request up to 20 comparables (RentCast recommended)
+    maxRadius: '2', // 2 mile radius for better coverage
+    daysOld: '180', // Comparables from last 6 months for more recent data
   })
 
   // Add optional property details if available
@@ -177,6 +190,8 @@ async function fetchRentCastComparables(
 
   url.search = params.toString()
 
+  console.log('RentCast AVM request URL:', url.toString())
+  
   const response = await fetch(url.toString(), {
     headers: {
       'X-Api-Key': apiKey,
@@ -190,6 +205,7 @@ async function fetchRentCastComparables(
   }
 
   const data = await response.json()
+  console.log('RentCast AVM response:', JSON.stringify(data, null, 2))
   
   // Transform RentCast response to our format
   const comparables: ComparableProperty[] = (data.comparables || []).map((comp: RentCastComparable) => ({
@@ -199,9 +215,9 @@ async function fetchRentCastComparables(
     bedrooms: comp.bedrooms || 0,
     bathrooms: comp.bathrooms || 0,
     yearBuilt: comp.yearBuilt || 0,
-    lastSalePrice: comp.lastSalePrice || comp.listedPrice || 0,
+    lastSalePrice: comp.price || comp.lastSalePrice || comp.listedPrice || 0,
     lastSaleDate: comp.lastSaleDate || comp.listedDate || '',
-    pricePerSqFt: comp.squareFootage ? Math.round((comp.lastSalePrice || comp.listedPrice || 0) / comp.squareFootage) : 0,
+    pricePerSqFt: comp.squareFootage ? Math.round((comp.price || comp.lastSalePrice || comp.listedPrice || 0) / comp.squareFootage) : 0,
     similarity: Math.round((comp.correlation || 0) * 100),
     listingPrice: comp.listedPrice,
     daysOnMarket: comp.daysOnMarket
