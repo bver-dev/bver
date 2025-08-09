@@ -45,7 +45,6 @@ export async function getCachedPropertyData(
   zipCode: string
 ): Promise<any | null> {
   const cacheKey = getCacheKey(address, city, state, zipCode)
-  const fullAddress = `${address}, ${city}, ${state} ${zipCode}`
   
   // Check local cache first
   const localData = localCache.get(cacheKey)
@@ -61,7 +60,10 @@ export async function getCachedPropertyData(
     const { data, error } = await supabase
       .from('property_data_cache')
       .select('*')
-      .eq('address', fullAddress)
+      .eq('address', address)
+      .eq('city', city)
+      .eq('state', state)
+      .eq('zip_code', zipCode)
       .single()
     
     if (error) {
@@ -69,14 +71,14 @@ export async function getCachedPropertyData(
       return null
     }
     
-    if (data && new Date(data.expires_at) > new Date()) {
+    if (data && isCacheValid(data.updated_at)) {
       console.log('Property data found in Supabase cache')
       // Update local cache
       localCache.set(cacheKey, {
-        data: data.data,
-        timestamp: new Date(data.created_at).getTime()
+        data: data.api_response,
+        timestamp: new Date(data.updated_at).getTime()
       })
-      return data.data
+      return data.api_response
     }
     
     console.log('Cached data expired')
@@ -101,7 +103,6 @@ export async function setCachedPropertyData(
   apiResponse: any
 ): Promise<void> {
   const cacheKey = getCacheKey(address, city, state, zipCode)
-  const fullAddress = `${address}, ${city}, ${state} ${zipCode}`
   
   // Update local cache immediately
   localCache.set(cacheKey, {
@@ -113,22 +114,22 @@ export async function setCachedPropertyData(
   try {
     const supabase = await createClient()
     
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + CACHE_DURATION_DAYS)
-    
     const cacheData = {
-      address: fullAddress,
-      api_source: dataSource,
-      data: apiResponse,
-      expires_at: expiresAt.toISOString()
+      address,
+      city,
+      state,
+      zip_code: zipCode,
+      lat,
+      lng,
+      data_source: dataSource,
+      api_response: apiResponse,
+      updated_at: new Date().toISOString()
     }
     
     // Upsert - insert or update if exists
     const { error } = await supabase
       .from('property_data_cache')
-      .upsert(cacheData, {
-        onConflict: 'address'
-      })
+      .upsert(cacheData)
     
     if (error) {
       console.error('Error saving to cache:', error)
@@ -147,12 +148,13 @@ export async function clearExpiredCache(): Promise<void> {
   try {
     const supabase = await createClient()
     
-    const now = new Date()
+    const expiryDate = new Date()
+    expiryDate.setDate(expiryDate.getDate() - CACHE_DURATION_DAYS)
     
     const { error } = await supabase
       .from('property_data_cache')
       .delete()
-      .lt('expires_at', now.toISOString())
+      .lt('updated_at', expiryDate.toISOString())
     
     if (error) {
       console.error('Error clearing expired cache:', error)
@@ -180,12 +182,13 @@ export async function getCacheStats(): Promise<{
       .from('property_data_cache')
       .select('*', { count: 'exact', head: true })
     
-    const now = new Date()
+    const expiryDate = new Date()
+    expiryDate.setDate(expiryDate.getDate() - CACHE_DURATION_DAYS)
     
     const { count: validCount } = await supabase
       .from('property_data_cache')
       .select('*', { count: 'exact', head: true })
-      .gte('expires_at', now.toISOString())
+      .gte('updated_at', expiryDate.toISOString())
     
     return {
       totalEntries: totalCount || 0,

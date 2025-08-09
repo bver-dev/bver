@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, Loader2, Home, TrendingDown } from 'lucide-react'
+import { MapPin, Loader2, Home } from 'lucide-react'
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api'
 
 interface MapAnimationProps {
   lat: number
@@ -10,266 +11,188 @@ interface MapAnimationProps {
   isSearching: boolean
 }
 
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%'
+}
+
+const mapOptions = {
+  disableDefaultUI: true,
+  zoomControl: false,
+  mapTypeControl: false,
+  scaleControl: false,
+  streetViewControl: false,
+  rotateControl: false,
+  fullscreenControl: false,
+  styles: [
+    {
+      featureType: "poi",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }]
+    }
+  ]
+}
+
 export default function MapAnimation({ lat, lng, isSearching }: MapAnimationProps) {
-  const [zoomLevel, setZoomLevel] = useState(1)
-  const [showPin, setShowPin] = useState(false)
-  const [mapOpacity, setMapOpacity] = useState(0)
+  const [zoom, setZoom] = useState(5)
+  const [showMarker, setShowMarker] = useState(false)
+  const mapRef = useRef<google.maps.Map | null>(null)
+  
+  const center = {
+    lat: lat,
+    lng: lng
+  }
 
   useEffect(() => {
-    // Fade in map immediately
-    setMapOpacity(1)
-    
-    // Animate zoom effect more smoothly with better timing
-    const zoomSteps = [1, 1.2, 1.5, 2, 2.8, 4, 6, 8, 10, 12]
+    // Animate zoom in steps
+    const zoomSteps = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
     let currentStep = 0
 
     const zoomInterval = setInterval(() => {
       if (currentStep < zoomSteps.length) {
-        setZoomLevel(zoomSteps[currentStep])
+        setZoom(zoomSteps[currentStep])
         currentStep++
         
-        // Show pin when zoom is mostly complete
-        if (currentStep === zoomSteps.length - 3) {
-          setShowPin(true)
+        // Show marker when zoom is at 70% complete
+        if (currentStep === Math.floor(zoomSteps.length * 0.7)) {
+          setShowMarker(true)
         }
       } else {
         clearInterval(zoomInterval)
       }
-    }, 180)
+    }, 200)
 
     return () => clearInterval(zoomInterval)
   }, [])
 
+  const onLoad = (map: google.maps.Map) => {
+    mapRef.current = map
+  }
+
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 overflow-hidden">
-      {/* Animated background pattern */}
-      <motion.div
-        className="absolute inset-0"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: mapOpacity * 0.3 }}
-        transition={{ duration: 1 }}
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
-      </motion.div>
-
-      {/* Map Container */}
-      <motion.div 
-        className="relative w-full h-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Animated Map Background */}
-        <motion.div
-          className="absolute inset-0 flex items-center justify-center"
-          initial={{ scale: 1 }}
-          animate={{ scale: zoomLevel }}
-          transition={{ 
-            duration: 0.4, 
-            ease: [0.25, 0.1, 0.25, 1] // Custom easing for smoother animation
-          }}
-        >
-          {/* Grid pattern to simulate map */}
-          <div className="w-[200%] h-[200%] relative">
-            <svg
-              className="absolute inset-0 w-full h-full"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <pattern
-                  id="grid"
-                  width="40"
-                  height="40"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M 40 0 L 0 0 0 40"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.3)"
-                    strokeWidth="1"
-                  />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-            </svg>
-
-            {/* Simulated streets with better layout */}
-            <motion.div 
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              {/* Main roads */}
-              <div className="absolute top-[45%] left-0 right-0 h-2 bg-white/30" />
-              <div className="absolute top-[55%] left-0 right-0 h-2 bg-white/30" />
-              <div className="absolute left-[45%] top-0 bottom-0 w-2 bg-white/30" />
-              <div className="absolute left-[55%] top-0 bottom-0 w-2 bg-white/30" />
-              
-              {/* Secondary roads */}
-              <div className="absolute top-[30%] left-0 right-0 h-1 bg-white/20" />
-              <div className="absolute top-[70%] left-0 right-0 h-1 bg-white/20" />
-              <div className="absolute left-[30%] top-0 bottom-0 w-1 bg-white/20" />
-              <div className="absolute left-[70%] top-0 bottom-0 w-1 bg-white/20" />
-            </motion.div>
-
-            {/* Simulated buildings/blocks */}
-            <motion.div
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: zoomLevel > 3 ? 0.3 : 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              {[...Array(20)].map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute bg-white/5 rounded"
-                  style={{
-                    width: `${Math.random() * 40 + 20}px`,
-                    height: `${Math.random() * 40 + 20}px`,
-                    left: `${Math.random() * 90}%`,
-                    top: `${Math.random() * 90}%`,
-                  }}
-                />
-              ))}
-            </motion.div>
+    <div className="absolute inset-0 overflow-hidden">
+      <LoadScript 
+        googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
+        loadingElement={
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 flex items-center justify-center">
+            <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
           </div>
-        </motion.div>
+        }
+      >
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={center}
+          zoom={zoom}
+          onLoad={onLoad}
+          options={mapOptions}
+        >
+          {showMarker && (
+            <Marker
+              position={center}
+              animation={google.maps.Animation.DROP}
+              icon={{
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 8,
+                fillColor: '#EF4444',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 2,
+                rotation: 180,
+              }}
+            />
+          )}
+        </GoogleMap>
+      </LoadScript>
 
-        {/* Map Pin with improved animation */}
-        <AnimatePresence>
-          {showPin && (
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {isSearching && (
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/70 flex items-center justify-center z-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             <motion.div
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full z-20"
-              initial={{ scale: 0, y: -200, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
+              className="bg-white rounded-3xl p-10 shadow-2xl max-w-md"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
               transition={{ 
-                type: "spring",
-                stiffness: 120,
-                damping: 20,
-                delay: 0.2
+                duration: 0.3,
+                ease: [0.25, 0.1, 0.25, 1]
               }}
             >
-              <div className="relative">
-                {/* Pulsing ring */}
-                <motion.div
-                  className="absolute -inset-4"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ 
-                    scale: [1, 1.5, 1],
-                    opacity: [0.5, 0, 0.5]
-                  }}
-                  transition={{ 
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <div className="w-16 h-16 bg-red-500/30 rounded-full" />
-                </motion.div>
+              <div className="flex flex-col items-center space-y-6">
+                <div className="relative">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Loader2 className="w-16 h-16 text-blue-600" />
+                  </motion.div>
+                </div>
 
-                {/* Pin icon */}
-                <MapPin className="w-12 h-12 text-red-500 drop-shadow-xl" fill="currentColor" />
-                
-                {/* Center dot */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full" />
+                <div className="text-center space-y-2">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    Analyzing Property
+                  </h3>
+                  <p className="text-gray-600">
+                    Gathering assessment data...
+                  </p>
+                </div>
+
+                {/* Progress dots */}
+                <div className="flex space-x-2">
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-2 h-2 bg-blue-600 rounded-full"
+                      animate={{ 
+                        scale: [1, 1.5, 1],
+                        opacity: [0.5, 1, 0.5]
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        delay: i * 0.2
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Loading Overlay with better transition */}
-        <AnimatePresence>
-          {isSearching && (
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60 flex items-center justify-center z-30"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <motion.div
-                className="bg-white rounded-3xl p-10 shadow-2xl max-w-md"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ 
-                  duration: 0.3,
-                  ease: [0.25, 0.1, 0.25, 1]
-                }}
-              >
-                <div className="flex flex-col items-center space-y-6">
-                  {/* Animated icon */}
-                  <div className="relative">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Loader2 className="w-16 h-16 text-blue-600" />
-                    </motion.div>
-                  </div>
+      {/* Coordinate Display */}
+      <motion.div 
+        className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm text-gray-800 px-4 py-2 rounded-lg shadow-lg text-sm"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: showMarker ? 1 : 0, y: showMarker ? 0 : 20 }}
+        transition={{ delay: 0.5, duration: 0.3 }}
+      >
+        <div className="flex items-center space-x-2">
+          <Home className="w-4 h-4 text-blue-600" />
+          <span className="font-mono">
+            {lat.toFixed(4)}, {lng.toFixed(4)}
+          </span>
+        </div>
+      </motion.div>
 
-                  <div className="text-center space-y-2">
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      Analyzing Property
-                    </h3>
-                    <p className="text-gray-600">
-                      Gathering assessment data...
-                    </p>
-                  </div>
-
-                  {/* Progress indicators */}
-                  <div className="flex space-x-2">
-                    {[0, 1, 2].map((i) => (
-                      <motion.div
-                        key={i}
-                        className="w-2 h-2 bg-blue-600 rounded-full"
-                        animate={{ 
-                          scale: [1, 1.5, 1],
-                          opacity: [0.5, 1, 0.5]
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          delay: i * 0.2
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Coordinate Display with fade effect */}
-        <motion.div 
-          className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: showPin ? 1 : 0, y: showPin ? 0 : 20 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
-        >
-          <div className="flex items-center space-x-2">
-            <Home className="w-4 h-4" />
-            <span className="font-mono">
-              {lat.toFixed(4)}, {lng.toFixed(4)}
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Status indicator */}
-        <motion.div 
-          className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: showPin && !isSearching ? 1 : 0, x: showPin && !isSearching ? 0 : 20 }}
-          transition={{ delay: 0.8, duration: 0.3 }}
-        >
-          <div className="flex items-center space-x-2 text-green-600">
-            <TrendingDown className="w-4 h-4" />
-            <span>Property Located</span>
-          </div>
-        </motion.div>
+      {/* Status indicator */}
+      <motion.div 
+        className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg text-sm font-medium"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: showMarker && !isSearching ? 1 : 0, x: showMarker && !isSearching ? 0 : 20 }}
+        transition={{ delay: 0.8, duration: 0.3 }}
+      >
+        <div className="flex items-center space-x-2 text-green-600">
+          <MapPin className="w-4 h-4" />
+          <span>Property Located</span>
+        </div>
       </motion.div>
     </div>
   )

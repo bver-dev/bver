@@ -15,17 +15,18 @@ export default function HomePage() {
 
   const handleAddressSelect = (address: string, lat: number, lng: number) => {
     setSelectedAddress(address)
+    // Show map immediately
     setCoordinates({ lat, lng })
     
-    // Delay before showing search animation for smoother transition
+    // Show loading overlay after zoom completes
     setTimeout(() => {
       setIsSearching(true)
       
-      // Navigate after animation
+      // Navigate after showing loading briefly
       setTimeout(() => {
         router.push(`/assessment?address=${encodeURIComponent(address)}&lat=${lat}&lng=${lng}`)
-      }, 2000)
-    }, 2000) // Let map zoom animation complete first
+      }, 1500)
+    }, 3000) // Give full time for zoom animation
   }
 
   const stats = [
