@@ -547,6 +547,8 @@ export default function AssessmentFlow({
                     bedrooms={propertyDetails.bedrooms}
                     bathrooms={propertyDetails.bathrooms}
                     propertyType={propertyDetails.propertyType}
+                    assessedValue={assessmentResult.currentAssessment}
+                    estimatedMarketValue={assessmentResult.estimatedMarketValue}
                   />
                 </motion.div>
               </div>

@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { MapPin, Home, Calendar, TrendingUp, DollarSign } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import ComparablesMap from './ComparablesMap'
 
 interface ComparableProperty {
   address: string
@@ -49,6 +50,8 @@ interface ComparablesProps {
   bedrooms?: number
   bathrooms?: number
   propertyType?: string
+  assessedValue?: number
+  estimatedMarketValue?: number
 }
 
 export default function Comparables({
@@ -61,7 +64,9 @@ export default function Comparables({
   squareFeet,
   bedrooms,
   bathrooms,
-  propertyType
+  propertyType,
+  assessedValue,
+  estimatedMarketValue
 }: ComparablesProps) {
   const [comparablesData, setComparablesData] = useState<ComparablesData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -142,18 +147,6 @@ export default function Comparables({
     }).format(value)
   }
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-  }
-
-  const getSimilarityColor = (similarity: number) => {
-    if (similarity >= 90) return 'text-green-600 bg-green-50'
-    if (similarity >= 80) return 'text-blue-600 bg-blue-50'
-    if (similarity >= 70) return 'text-yellow-600 bg-yellow-50'
-    return 'text-gray-600 bg-gray-50'
-  }
-
   return (
     <div className="space-y-6">
       {/* Valuation Estimate */}
@@ -224,68 +217,19 @@ export default function Comparables({
         </CardContent>
       </Card>
 
-      {/* Comparable Properties List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Home className="w-5 h-5" />
-            Comparable Properties
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {comparablesData.comparables.map((property, index) => (
-              <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-3">
-                      <MapPin className="w-4 h-4 text-gray-600 mt-1 flex-shrink-0" />
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900">{property.address}</div>
-                        <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-700">
-                          <span>{property.bedrooms} bed</span>
-                          <span>{property.bathrooms} bath</span>
-                          <span>{property.squareFeet.toLocaleString()} sq ft</span>
-                          <span>Built {property.yearBuilt}</span>
-                          <span className="text-blue-600">{property.distance} mi away</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right ml-4">
-                    <div className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(property.lastSalePrice)}
-                    </div>
-                    <div className="text-sm text-gray-700">
-                      {formatCurrency(property.pricePerSqFt)}/sq ft
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Calendar className="w-3 h-3 text-gray-600" />
-                      <span className="text-xs text-gray-600">
-                        Sold {formatDate(property.lastSaleDate)}
-                      </span>
-                    </div>
-                    <div className="mt-2">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${getSimilarityColor(property.similarity)}`}>
-                        {property.similarity}% match
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                {property.listingPrice && (
-                  <div className="mt-2 pt-2 border-t text-sm text-gray-700">
-                    <DollarSign className="w-3 h-3 inline mr-1" />
-                    Listed at {formatCurrency(property.listingPrice)}
-                    {property.daysOnMarket && ` • ${property.daysOnMarket} days on market`}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Comparable Properties Map */}
+      {lat && lng && comparablesData.comparables.length > 0 && (
+        <ComparablesMap
+          subjectProperty={{
+            address: `${address}, ${city}, ${state} ${zipCode}`,
+            lat: lat,
+            lng: lng,
+            assessedValue: assessedValue || 0,
+            estimatedMarketValue: estimatedMarketValue || 0
+          }}
+          comparables={comparablesData.comparables}
+        />
+      )}
     </div>
   )
 }
