@@ -71,7 +71,7 @@ export async function getCachedPropertyData(
       return null
     }
     
-    if (data && isCacheValid(data.updated_at)) {
+    if (data && data.updated_at && isCacheValid(data.updated_at)) {
       console.log('Property data found in Supabase cache')
       // Update local cache
       localCache.set(cacheKey, {

@@ -73,22 +73,7 @@ export type Database = {
           user_id?: string
           viability_score?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "appeals_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appeals_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       assessment_history: {
         Row: {
@@ -124,68 +109,7 @@ export type Database = {
           model_version?: string | null
           property_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "assessment_history_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      assessments: {
-        Row: {
-          id: string
-          user_id: string | null
-          address: string
-          assessed_value: number | null
-          estimated_value: number | null
-          over_assessment_amount: number | null
-          over_assessment_percentage: number | null
-          viability: string | null
-          confidence_score: number | null
-          data_sources: Json | null
-          created_at: string
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          address: string
-          assessed_value?: number | null
-          estimated_value?: number | null
-          over_assessment_amount?: number | null
-          over_assessment_percentage?: number | null
-          viability?: string | null
-          confidence_score?: number | null
-          data_sources?: Json | null
-          created_at?: string
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          address?: string
-          assessed_value?: number | null
-          estimated_value?: number | null
-          over_assessment_amount?: number | null
-          over_assessment_percentage?: number | null
-          viability?: string | null
-          confidence_score?: number | null
-          data_sources?: Json | null
-          created_at?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "assessments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       documents: {
         Row: {
@@ -224,29 +148,7 @@ export type Database = {
           property_id?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "documents_appeal_id_fkey"
-            columns: ["appeal_id"]
-            isOneToOne: false
-            referencedRelation: "appeals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       properties: {
         Row: {
@@ -300,40 +202,47 @@ export type Database = {
           user_id?: string
           zip_code?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "properties_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       property_data_cache: {
         Row: {
-          id: string
           address: string
-          api_source: string
-          data: Json
-          created_at: string
-          expires_at: string
+          api_response: Json
+          city: string | null
+          created_at: string | null
+          data_source: string
+          id: string
+          lat: number | null
+          lng: number | null
+          state: string | null
+          updated_at: string | null
+          zip_code: string | null
         }
         Insert: {
-          id?: string
           address: string
-          api_source: string
-          data: Json
-          created_at?: string
-          expires_at: string
+          api_response: Json
+          city?: string | null
+          created_at?: string | null
+          data_source: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          state?: string | null
+          updated_at?: string | null
+          zip_code?: string | null
         }
         Update: {
-          id?: string
           address?: string
-          api_source?: string
-          data?: Json
-          created_at?: string
-          expires_at?: string
+          api_response?: Json
+          city?: string | null
+          created_at?: string | null
+          data_source?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          state?: string | null
+          updated_at?: string | null
+          zip_code?: string | null
         }
         Relationships: []
       }
@@ -365,97 +274,9 @@ export type Database = {
         Relationships: []
       }
     }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Views: {}
+    Functions: {}
+    Enums: {}
+    CompositeTypes: {}
   }
 }
-
-export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
-      Database["public"]["Views"])
-  ? (Database["public"]["Tables"] &
-      Database["public"]["Views"])[PublicTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : never
-
-export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : never
-
-export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : never
-
-export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof Database["public"]["Enums"]
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-    : never = never
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
-  ? Database["public"]["Enums"][PublicEnumNameOrOptions]
-  : never

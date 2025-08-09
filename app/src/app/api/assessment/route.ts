@@ -84,29 +84,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Store assessment in database if user is authenticated
+    // TODO: Implement proper assessment storage once database schema is finalized
+    // The assessment_history table needs to be updated to match this data structure
+    // or a new assessments table needs to be created
+    /*
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
     if (user) {
-      const { error } = await supabase
-        .from('assessments')
-        .insert({
-          user_id: user.id,
-          address: propertyDetails.address,
-          assessed_value: propertyDetails.assessedValue,
-          estimated_market_value: estimatedMarketValue,
-          over_assessment_amount: overAssessmentAmount,
-          over_assessment_percentage: overAssessmentPercentage,
-          viability,
-          confidence,
-          property_data: propertyDetails,
-          result_data: result
-        })
-      
-      if (error) {
-        console.error('Error storing assessment:', error)
-      }
+      // This would need to be mapped to the correct table structure
+      // Current assessment_history table doesn't have all these fields
     }
+    */
 
     return NextResponse.json(result)
   } catch (error) {

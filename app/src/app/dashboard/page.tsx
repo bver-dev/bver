@@ -23,12 +23,18 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
+  // TODO: Update to use the correct table once assessment storage is implemented
+  // For now, using an empty array as placeholder
+  const assessments: any[] = []
+  
+  /* This will be implemented once the assessment table is ready
   const { data: assessments } = await supabase
-    .from('assessments')
+    .from('assessment_history')
     .select('*')
-    .eq('user_id', user.id)
+    // Note: assessment_history doesn't have user_id field currently
     .order('created_at', { ascending: false })
     .limit(5)
+  */
 
   // Calculate total savings
   const totalSavings = assessments?.reduce((sum, a) => 

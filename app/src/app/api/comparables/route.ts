@@ -160,9 +160,9 @@ export async function GET(request: NextRequest) {
 
 async function fetchRentCastComparables(
   address: string,
-  city: string,
-  state: string,
-  zipCode: string,
+  city: string | null,
+  state: string | null,
+  zipCode: string | null,
   lat: number,
   lng: number,
   squareFeet: number,
@@ -175,8 +175,15 @@ async function fetchRentCastComparables(
   const url = new URL('https://api.rentcast.io/v1/avm/value')
   
   // Build query parameters
+  // Construct full address, handling null values
+  const fullAddress = [
+    address,
+    city,
+    state && zipCode ? `${state} ${zipCode}` : state || zipCode
+  ].filter(Boolean).join(', ')
+  
   const params = new URLSearchParams({
-    address: `${address}, ${city}, ${state} ${zipCode}`,
+    address: fullAddress,
     compCount: '20', // Request up to 20 comparables (RentCast recommended)
     maxRadius: '2', // 2 mile radius for better coverage
     daysOld: '180', // Comparables from last 6 months for more recent data
