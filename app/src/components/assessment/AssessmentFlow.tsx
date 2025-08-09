@@ -10,6 +10,8 @@ import {
 import { formatCurrency, formatPercentage } from '@/lib/utils'
 import ViabilityMeter from './ViabilityMeter'
 import PropertyDetailsForm from './PropertyDetailsForm'
+import MarketTrends from './MarketTrends'
+import Comparables from './Comparables'
 
 interface AssessmentFlowProps {
   initialAddress: string
@@ -57,9 +59,20 @@ export default function AssessmentFlow({
       
       const data = await response.json()
       
+      // Parse address components
+      const addressParts = initialAddress.split(',').map(part => part.trim())
+      const streetAddress = addressParts[0] || ''
+      const city = addressParts[1] || data.city || ''
+      const stateZip = addressParts[2] || ''
+      const [state, zipCode] = stateZip.split(' ').filter(Boolean)
+      
       // Map API response to our property details format
       const propertyData = {
         address: initialAddress,
+        streetAddress,
+        city,
+        state,
+        zipCode,
         lat: latitude,
         lng: longitude,
         assessedValue: data.assessedValue || null,
@@ -142,9 +155,19 @@ export default function AssessmentFlow({
       // Fetch comparables if we have coordinates
       if (latitude && longitude && details.squareFeet) {
         try {
-          const compResponse = await fetch(
-            `/api/comparables?lat=${latitude}&lng=${longitude}&squareFeet=${details.squareFeet}&bedrooms=${details.bedrooms || 0}&bathrooms=${details.bathrooms || 0}&propertyType=${details.propertyType || 'Single Family'}`
-          )
+          const params = new URLSearchParams({
+            address: details.streetAddress || initialAddress.split(',')[0],
+            city: details.city || '',
+            state: details.state || '',
+            zipCode: details.zipCode || '',
+            lat: latitude.toString(),
+            lng: longitude.toString(),
+            squareFeet: details.squareFeet.toString(),
+            bedrooms: (details.bedrooms || 0).toString(),
+            bathrooms: (details.bathrooms || 0).toString(),
+            propertyType: details.propertyType || 'Single Family'
+          })
+          const compResponse = await fetch(`/api/comparables?${params}`)
           
           if (compResponse.ok) {
             const compData = await compResponse.json()
@@ -450,6 +473,46 @@ export default function AssessmentFlow({
                 Download Full Report
               </button>
             </motion.div>
+
+            {/* Market Trends and Comparables */}
+            {propertyDetails && (
+              <div className="space-y-8 mt-8">
+                {/* Market Trends */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Market Trends</h2>
+                  <MarketTrends 
+                    zipCode={propertyDetails.zipCode || initialAddress.split(' ').pop() || ''}
+                    city={propertyDetails.city}
+                    state={propertyDetails.state}
+                  />
+                </motion.div>
+
+                {/* Comparable Properties */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Comparable Properties</h2>
+                  <Comparables
+                    address={propertyDetails.address || initialAddress}
+                    city={propertyDetails.city || ''}
+                    state={propertyDetails.state || ''}
+                    zipCode={propertyDetails.zipCode || initialAddress.split(' ').pop() || ''}
+                    lat={latitude}
+                    lng={longitude}
+                    squareFeet={propertyDetails.squareFeet}
+                    bedrooms={propertyDetails.bedrooms}
+                    bathrooms={propertyDetails.bathrooms}
+                    propertyType={propertyDetails.propertyType}
+                  />
+                </motion.div>
+              </div>
+            )}
           </motion.div>
         )}
       </div>

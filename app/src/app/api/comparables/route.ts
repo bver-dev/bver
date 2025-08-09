@@ -1,4 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getCachedPropertyData, setCachedPropertyData } from '@/lib/property-cache'
+
+interface RentCastComparable {
+  id: string
+  formattedAddress: string
+  addressLine1: string
+  city: string
+  state: string
+  zipCode: string
+  county: string
+  latitude: number
+  longitude: number
+  squareFootage?: number
+  bedrooms?: number
+  bathrooms?: number
+  yearBuilt?: number
+  propertyType?: string
+  lastSaleDate?: string
+  lastSalePrice?: number
+  listedDate?: string
+  listedPrice?: number
+  removedDate?: string
+  daysOnMarket?: number
+  distance: number
+  correlation: number
+}
 
 interface ComparableProperty {
   address: string
@@ -11,10 +37,16 @@ interface ComparableProperty {
   lastSaleDate: string
   pricePerSqFt: number
   similarity: number // 0-100 score
+  listingPrice?: number
+  daysOnMarket?: number
 }
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
+  const address = searchParams.get('address')
+  const city = searchParams.get('city')
+  const state = searchParams.get('state')
+  const zipCode = searchParams.get('zipCode')
   const lat = parseFloat(searchParams.get('lat') || '0')
   const lng = parseFloat(searchParams.get('lng') || '0')
   const squareFeet = parseInt(searchParams.get('squareFeet') || '0')
@@ -22,9 +54,66 @@ export async function GET(request: NextRequest) {
   const bathrooms = parseFloat(searchParams.get('bathrooms') || '0')
   const propertyType = searchParams.get('propertyType') || 'Single Family'
 
+  if (!address || !city || !state || !zipCode) {
+    return NextResponse.json(
+      { error: 'Address components required' },
+      { status: 400 }
+    )
+  }
+
   try {
-    // In production, this would call RentCast or ATTOM API for actual comparables
-    // For now, generate realistic mock comparables
+    // Check cache first
+    const cacheKey = `comparables_${address}_${city}_${state}_${zipCode}`
+    const cachedData = await getCachedPropertyData(
+      cacheKey,
+      city,
+      state,
+      zipCode
+    )
+    
+    if (cachedData) {
+      console.log('Using cached comparables data')
+      return NextResponse.json(cachedData)
+    }
+
+    // Try RentCast API if configured
+    const rentcastKey = process.env.RENTCAST_API_KEY
+    if (rentcastKey) {
+      try {
+        const comparablesData = await fetchRentCastComparables(
+          address,
+          city,
+          state,
+          zipCode,
+          lat,
+          lng,
+          squareFeet,
+          bedrooms,
+          bathrooms,
+          propertyType,
+          rentcastKey
+        )
+        
+        // Cache the response
+        await setCachedPropertyData(
+          cacheKey,
+          city,
+          state,
+          zipCode,
+          lat,
+          lng,
+          'rentcast_comparables',
+          comparablesData
+        )
+        
+        return NextResponse.json(comparablesData)
+      } catch (apiError) {
+        console.error('RentCast comparables API error:', apiError)
+        // Fall through to mock data
+      }
+    }
+
+    // Fall back to mock data
     const comparables = generateMockComparables(
       lat,
       lng,
@@ -34,21 +123,106 @@ export async function GET(request: NextRequest) {
       propertyType
     )
 
-    return NextResponse.json({
+    const response = {
       comparables,
       summary: {
         count: comparables.length,
         avgPricePerSqFt: calculateAvgPricePerSqFt(comparables),
         avgSalePrice: calculateAvgSalePrice(comparables),
-        radius: 1.0 // 1 mile radius
+        radius: 1.0,
+        dataSource: 'mock'
       }
-    })
+    }
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error('Comparables API error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch comparable properties' },
       { status: 500 }
     )
+  }
+}
+
+async function fetchRentCastComparables(
+  address: string,
+  city: string,
+  state: string,
+  zipCode: string,
+  lat: number,
+  lng: number,
+  squareFeet: number,
+  bedrooms: number,
+  bathrooms: number,
+  propertyType: string,
+  apiKey: string
+) {
+  // RentCast AVM endpoint for property value and comparables
+  const url = new URL('https://api.rentcast.io/v1/avm/value')
+  
+  // Build query parameters
+  const params = new URLSearchParams({
+    address: `${address}, ${city}, ${state} ${zipCode}`,
+    compCount: '10', // Request up to 10 comparables
+    maxRadius: '1', // 1 mile radius
+    daysOld: '365', // Comparables from last year
+  })
+
+  // Add optional property details if available
+  if (squareFeet > 0) params.append('squareFootage', squareFeet.toString())
+  if (bedrooms > 0) params.append('bedrooms', bedrooms.toString())
+  if (bathrooms > 0) params.append('bathrooms', bathrooms.toString())
+  if (propertyType) params.append('propertyType', propertyType)
+
+  url.search = params.toString()
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      'X-Api-Key': apiKey,
+      'Accept': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`RentCast API error: ${response.status} - ${error}`)
+  }
+
+  const data = await response.json()
+  
+  // Transform RentCast response to our format
+  const comparables: ComparableProperty[] = (data.comparables || []).map((comp: RentCastComparable) => ({
+    address: comp.formattedAddress || `${comp.addressLine1}, ${comp.city}, ${comp.state} ${comp.zipCode}`,
+    distance: comp.distance || 0,
+    squareFeet: comp.squareFootage || 0,
+    bedrooms: comp.bedrooms || 0,
+    bathrooms: comp.bathrooms || 0,
+    yearBuilt: comp.yearBuilt || 0,
+    lastSalePrice: comp.lastSalePrice || comp.listedPrice || 0,
+    lastSaleDate: comp.lastSaleDate || comp.listedDate || '',
+    pricePerSqFt: comp.squareFootage ? Math.round((comp.lastSalePrice || comp.listedPrice || 0) / comp.squareFootage) : 0,
+    similarity: Math.round((comp.correlation || 0) * 100),
+    listingPrice: comp.listedPrice,
+    daysOnMarket: comp.daysOnMarket
+  })).filter((comp: ComparableProperty) => comp.lastSalePrice > 0)
+
+  return {
+    comparables,
+    summary: {
+      count: comparables.length,
+      avgPricePerSqFt: calculateAvgPricePerSqFt(comparables),
+      avgSalePrice: calculateAvgSalePrice(comparables),
+      radius: 1.0,
+      dataSource: 'rentcast'
+    },
+    valuation: {
+      estimate: data.price || null,
+      estimateRange: {
+        low: data.priceRangeLow || null,
+        high: data.priceRangeHigh || null
+      },
+      confidence: data.fmvConfidenceScore || null
+    }
   }
 }
 
@@ -90,7 +264,8 @@ function generateMockComparables(
       lastSalePrice: salePrice,
       lastSaleDate: generateRecentDate(),
       pricePerSqFt: Math.round(salePrice / compSqFt),
-      similarity: Math.max(60, Math.min(95, similarity))
+      similarity: Math.max(60, Math.min(95, similarity)),
+      daysOnMarket: Math.floor(Math.random() * 90)
     })
   }
 
